@@ -1,5 +1,4 @@
 # Environment variable files
-.env
 
 # Node modules
 node_modules/
@@ -18,3 +17,4 @@ Thumbs.db
 # Editor settings (optional)
 .vscode/
 .idea/
+config.bat
