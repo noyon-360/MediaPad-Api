@@ -1,11 +1,8 @@
 const Note = require("../Models/Note");
-
 const { interpretCommand } = require("./gemini");
 
-// const { addNote, deleteNote } = require("../Controller/NoteController");
-
 const addNote = async (title, content, req) => {
-  console.log('Adding not view:', title, content);
+  console.log('Adding note:', title, content);
   try {
     const note = new Note({ title, content, user: req.user.id });
     await note.save();
@@ -54,7 +51,7 @@ const updateNote = async (title, newContent) => {
   }
 };
 
-const aiAgent = async (command, req) => {
+const aiAgent = async (command, req, userResponse = null) => {
   try {
     // Interpret the command
     const interpretation = await interpretCommand(command);
@@ -79,10 +76,16 @@ const aiAgent = async (command, req) => {
       const title = titleMatch[1];
       const content = contentMatch[1];
 
-
-      // Call addNote with the mock req object
-      const result = await addNote(title, content, req); // Pass an empty res object
-      return { response: result };
+      // Check if user has confirmed
+      if (userResponse === null) {
+        return { response: `Are you sure you want to add a note with title: "${title}" and content: "${content}"? (yes/no)` };
+      } else if (userResponse.toLowerCase() === 'yes') {
+        // Call addNote with the mock req object
+        const result = await addNote(title, content, req);
+        return { response: result };
+      } else {
+        return { response: 'Note addition cancelled.' };
+      }
     } else if (interpretation.startsWith('delete')) {
       const titleMatch = interpretation.match(/title: "([^"]+)"/);
 
@@ -92,9 +95,16 @@ const aiAgent = async (command, req) => {
 
       const title = titleMatch[1];
 
-      // Delete the note
-      const result = await deleteNote(title);
-      return { response: result };
+      // Check if user has confirmed
+      if (userResponse === null) {
+        return { response: `Are you sure you want to delete the note with title: "${title}"? (yes/no)` };
+      } else if (userResponse.toLowerCase() === 'yes') {
+        // Delete the note
+        const result = await deleteNote(title);
+        return { response: result };
+      } else {
+        return { response: 'Note deletion cancelled.' };
+      }
     } else if (interpretation.startsWith('search')) {
       const titleMatch = interpretation.match(/title: "([^"]+)"/);
 
